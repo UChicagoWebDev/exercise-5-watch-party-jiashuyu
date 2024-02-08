@@ -56,10 +56,8 @@ def new_user():
     name = "Unnamed User #" + ''.join(random.choices(string.digits, k=6))
     password = ''.join(random.choices(string.ascii_lowercase + string.digits, k=10))
     api_key = ''.join(random.choices(string.ascii_lowercase + string.digits, k=40))
-    u = query_db('insert into users (name, password, api_key) ' +
-                 'values (?, ?, ?) returning id, name, password, api_key',
-                 (name, password, api_key),
-                 one=True)
+    u = query_db("INSERT INTO users (name, password, api_key) VALUES (?, ?, ?) RETURNING id, name, password, api_key",
+                 [name, password, api_key], one=True)
     return u
 
 
@@ -67,7 +65,7 @@ def get_user_from_cookie(request):
     user_id = request.cookies.get('user_id')
     password = request.cookies.get('user_password')
     if user_id and password:
-        return query_db('select * from users where id = ? and password = ?', [user_id, password], one=True)
+        return query_db("SELECT * FROM users WHERE id = ? AND password = ?", [user_id, password], one=True)
     return None
 
 
@@ -85,7 +83,7 @@ def index():
     print("index")  # For debugging
     user = get_user_from_cookie(request)
     if user:
-        rooms = query_db('select * from rooms')
+        rooms = query_db("SELECT * FROM rooms")
         return render_with_error_handling('index.html', user=user, rooms=rooms)
     return render_with_error_handling('index.html', user=None, rooms=None)
 
@@ -98,7 +96,7 @@ def create_room():
         return {}, 403
     if request.method == 'POST':
         name = "Unnamed Room " + ''.join(random.choices(string.digits, k=6))
-        new_room = query_db('insert into rooms (name) values (?) returning id', [name], one=True)
+        new_room = query_db("INSERT INTO rooms (name) VALUES (?) RETURNING id", [name], one=True)
         return redirect(f'{new_room["id"]}')
     else:
         return app.send_static_file('create_room.html')
@@ -106,7 +104,7 @@ def create_room():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    print("signup")
+    print("signup")  # For debugging
     user = get_user_from_cookie(request)
     if user:
         return redirect('/profile')
@@ -125,7 +123,7 @@ def signup():
 
 @app.route('/profile')
 def profile():
-    print("profile")
+    print("profile")  # For debugging
     user = get_user_from_cookie(request)
     if user:
         return render_with_error_handling('profile.html', user=user)
@@ -134,14 +132,14 @@ def profile():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    print("login")
+    print("login")  # For debugging
     user = get_user_from_cookie(request)
     if user:
         return redirect('/')
     if request.method == 'POST':
         name = request.form['username']
         password = request.form['password']
-        u = query_db('select * from users where name = ? and password = ?', [name, password], one=True)
+        u = query_db("SELECT * FROM users WHERE name = ? AND password = ?", [name, password], one=True)
         if u:
             resp = make_response(redirect("/"))
             resp.set_cookie('user_id', str(u['id']))
@@ -154,6 +152,7 @@ def login():
 
 @app.route('/logout')
 def logout():
+    print("logout")  # For debugging
     resp = make_response(redirect('/'))
     resp.set_cookie('user_id', '')
     resp.set_cookie('user_password', '')
@@ -162,10 +161,11 @@ def logout():
 
 @app.route('/rooms/<int:room_id>')
 def room(room_id):
+    print("room")  # For debugging
     user = get_user_from_cookie(request)
     if user is None:
         return redirect('/')
-    selected_room = query_db('select * from rooms where id = ?', [room_id], one=True)
+    selected_room = query_db("SELECT * FROM rooms WHERE id = ?", [room_id], one=True)
     return render_with_error_handling('room.html', room=selected_room, user=user)
 
 
@@ -173,6 +173,7 @@ def room(room_id):
 # POST to change the user's name
 @app.route('/api/user/name', methods=['POST'])
 def update_username():
+    print("update username")  # For debugging
     user = get_user_from_cookie(request)
     if user:
         api_key = request.headers.get('Authorization')
@@ -186,6 +187,7 @@ def update_username():
 # POST to change the user's password
 @app.route('/api/user/password', methods=['POST'])
 def update_password():
+    print("update password")  # For debugging
     user = get_user_from_cookie(request)
     if user:
         api_key = request.headers.get('Authorization')
@@ -199,6 +201,7 @@ def update_password():
 # POST to change the name of a room
 @app.route('/api/rooms/<int:room_id>', methods=['POST'])
 def update_room_name(room_id):
+    print("update room name")  # For debugging
     user = get_user_from_cookie(request)
     if user:
         new_name = request.json.get('name')
@@ -213,7 +216,8 @@ def update_room_name(room_id):
 def get_messages(room_id):
     user = get_user_from_cookie(request)
     if user:
-        messages = query_db("SELECT * FROM messages LEFT JOIN users ON messages.user_id = users.id WHERE room_id = ?", [room_id])
+        messages = query_db("SELECT * FROM messages LEFT JOIN users ON messages.user_id = users.id WHERE room_id = ?",
+                            [room_id])
         if messages:
             json_result = jsonify([dict(m) for m in messages])
             return json_result, 200
@@ -226,6 +230,7 @@ def get_messages(room_id):
 # POST to post a new message to a room
 @app.route('/api/rooms/<int:room_id>/messages', methods=['POST'])
 def post_message(room_id):
+    print("post message")  # For debugging
     user = get_user_from_cookie(request)
     if user:
         api_key = request.headers.get('Authorization')
