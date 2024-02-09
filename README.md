@@ -37,8 +37,8 @@ requirements) is inspired by [yap.chat](https://yap.chat/).
   username/password, and they do not send the API key in the request body. [1 point]
 - Write Javascript code that uses `fetch` to retrieve that list of messages. [1 point]
 - When a chat room page first loads, clear any sample messages out of the chat
-  histoy. [1 point]
-- Create HTML elements for the messages retreived from the API using
+  history. [1 point]
+- Create HTML elements for the messages retrieved from the API using
   `document.createElement`. Do not write HTML strings. [1 point]
 - While in a room, check the messages endpoint every 100 ms and add any new messages
   to the chat history. [1 point]
@@ -54,3 +54,7 @@ requirements) is inspired by [yap.chat](https://yap.chat/).
   password without reloading the page. [1 point]
 - Javascript code to show/hide the room name edit UI and uses `fetch` to allow a user
   to update the name of a room without reloading the page. [1 point]
+
+### Collaborations
+
+With Zhiwei Cao and Tian Xia.
